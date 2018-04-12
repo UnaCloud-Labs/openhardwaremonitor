@@ -22,48 +22,134 @@ namespace OpenHardwareMonitor {
     private IDictionary<string, string> settings = 
       new Dictionary<string, string>();
 
-    public void Load(string fileName) {
-      XmlDocument doc = new XmlDocument();
-      try {
-        doc.Load(fileName);
-      } catch {
-        try {
-          File.Delete(fileName);
-        } catch { }
-
-        string backupFileName = fileName + ".backup";
-        try {
-          doc.Load(backupFileName);
-        } catch {
-          try {
-            File.Delete(backupFileName);
-          } catch { }
-
-          return;
-        }
-      }
-
-      XmlNodeList list = doc.GetElementsByTagName("appSettings");
-      foreach (XmlNode node in list) {
-        XmlNode parent = node.ParentNode;
-        if (parent != null && parent.Name == "configuration" && 
-          parent.ParentNode is XmlDocument) {
-          foreach (XmlNode child in node.ChildNodes) {
-            if (child.Name == "add") {
-              XmlAttributeCollection attributes = child.Attributes;
-              XmlAttribute keyAttribute = attributes["key"];
-              XmlAttribute valueAttribute = attributes["value"];
-              if (keyAttribute != null && valueAttribute != null && 
-                keyAttribute.Value != null) {
-                settings.Add(keyAttribute.Value, valueAttribute.Value);
-              }
+        public void Load(string fileName)
+        {
+            XmlDocument doc = new XmlDocument();
+            string route = fileName;
+            try
+            {
+                doc.Load(fileName);
             }
-          }
-        }
-      }
-    }
+            catch
+            {
+                try
+                {
+                    File.Delete(fileName);
+                }
+                catch { }
+                string backupFileName = fileName + ".backup";
+                try
+                {
+                    doc.Load(backupFileName);
+                }
+                catch
+                {
+                    try
+                    {
+                        File.Delete(backupFileName);
+                    }
+                    catch { }
+                    return;
 
-    public void Save(string fileName) {
+                }
+
+            }
+            bool encontro = false;
+            XmlNodeList list = doc.GetElementsByTagName("appSettings");
+            foreach (XmlNode node in list)
+            {
+                XmlNode parent = node.ParentNode;
+                if (parent != null && parent.Name == "configuration" &&
+                  parent.ParentNode is XmlDocument)
+                {
+                    foreach (XmlNode child in node.ChildNodes)
+                    {
+                        if (child.Name == "add")
+                        {
+                            XmlAttributeCollection attributes = child.Attributes;
+                            XmlAttribute keyAttribute = attributes["key"];
+                            if (keyAttribute != null && keyAttribute.Value.Equals("logSensorsMenuItem"))
+                            {
+                                attributes["value"].Value = "true";
+                                encontro = true;
+                                break;
+                            }
+
+                        }
+                    }
+                }
+            }
+            if (!encontro)
+            {
+                XmlElement add = doc.CreateElement("add");
+                add.SetAttribute("key", "logSensorsMenuItem");
+                add.SetAttribute("value", "true");
+
+                XmlNode conf = doc.GetElementsByTagName("appSettings").Item(0);
+
+                conf.AppendChild(add);
+
+            }
+            doc.Save(fileName);
+
+            doc = new XmlDocument();
+            try
+            {
+                doc.Load(fileName);
+            }
+            catch
+            {
+                try
+                {
+                    File.Delete(fileName);
+                }
+                catch { }
+
+
+
+                string backupFileName = fileName + ".backup";
+                try
+                {
+                    doc.Load(backupFileName);
+                }
+                catch
+                {
+                    try
+                    {
+                        File.Delete(backupFileName);
+                    }
+                    catch { }
+                    return;
+
+                }
+            }
+
+            list = doc.GetElementsByTagName("appSettings");
+            foreach (XmlNode node in list)
+            {
+                XmlNode parent = node.ParentNode;
+                if (parent != null && parent.Name == "configuration" &&
+                  parent.ParentNode is XmlDocument)
+                {
+                    foreach (XmlNode child in node.ChildNodes)
+                    {
+                        if (child.Name == "add")
+                        {
+                            XmlAttributeCollection attributes = child.Attributes;
+                            XmlAttribute keyAttribute = attributes["key"];
+                            XmlAttribute valueAttribute = attributes["value"];
+                            if (keyAttribute != null && valueAttribute != null &&
+                              keyAttribute.Value != null)
+                            {
+                                settings.Add(keyAttribute.Value, valueAttribute.Value);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public void Save(string fileName) {
 
       XmlDocument doc = new XmlDocument();
       doc.AppendChild(doc.CreateXmlDeclaration("1.0", "utf-8", null));
